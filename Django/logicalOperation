@@ -1,0 +1,50 @@
+''' OR operations'''
+#OR queries in ORM
+- queryset_1 | queryset_2
+- filter(Q(<condition_1>)|Q(<condition_2>) #Q is object ,from django.db.models import Q
+
+#query for fisrname starts with R and end with D
+User.objects.filter(first_name__startswith='R)|User.objects.filter(last_name__startswith='D')
+
+#method2
+from django.db.models import Q
+User.objects.filter(Q(first_name__startswith='R')|Q(last_name__startswith='D'))
+
+'''AND operations'''
+# find users with firstname starting with ‘R’ AND last_name starting with ‘D’.
+
+'''Django provides three options.
+
+filter(<condition_1>, <condition_2>)
+queryset_1 & queryset_2
+filter(Q(<condition_1>) & Q(<condition_2>))
+'''
+
+#method1
+User.objects.filter(first_name__startswith='R',last_name__startswith='D') #using comma
+
+#method2
+User.objects.filter(fisrt_name__startswith='R') & User.objects.filter(last_name__startswith='D')
+
+#method3
+User.objects.filter(Q(first_name__startswith='R')& Q(last_name__startswith='D'))
+
+''' NOT operation'''
+#fetch all users with id NOT < 5. You need a NOT operation.
+
+'''
+Django provides two options.
+
+exclude(<condition>)
+filter(~Q(<condition>))
+'''
+
+User.objects.filter(~Q(id__lt=5))
+
+'''Union operation  -all combine results'''
+#condition: You can do a union on two models as long as they have same fields or same subset of fields.
+#we can use values_list to limit the selected fields then do a union.
+Hero.objects.all().values_list("name","gender").union(Villians.objects.all().values_list("name","gender"))
+
+
+

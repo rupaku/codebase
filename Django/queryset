@@ -1,0 +1,304 @@
+''' queryset
+    - a collection of objects of a given model,allows us to read data from DB.
+    - In SQL terms, a QuerySet equates to a SELECT statement, and a filter is a limiting clause such as WHERE or LIMIT.
+'''
+
+#shell
+python manage.py shell
+
+#To get sql query from queryset
+>>> queryset = Event.objects.all()
+>>> str(queryset.query)
+SELECT "events_event"."id", "events_event"."epic_id",
+       "events_event"."details", "events_event"."years_ago"  FROM "events_event"
+
+#display all posts
+from blog.models import Post
+Post.objects.all()
+
+#create Post
+from django.contrib.auth.models import User
+me=User.objects.get(username='ola')
+
+Post.objects.create(author=me, title='Sample title', text='Test')
+
+#filter
+Post.objets.filter(author=me)
+
+Post.objects.filter(published_date__lte=timezone.now()) #__lte less than  time i.e Past
+
+#ordering Object
+Post.objects.order_by('created_date')
+
+#reverse ordering
+Post.objects.order_by('-created_date') #hyphen in start
+
+#method chaining
+Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+
+#years ago > 5
+Event.objects.filter(years_ago__gt=5) #__gt greater than
+
+#Filter queryset with criteria
+
+#find the users where first_name==last_name
+User.objects.filter(last_name=F(“first_name))
+
+#2nd highest record
+User.objects.order_by(‘-last_login’)[1]
+
+#3rd highest
+User.objects.order_by(‘-last_login’)[2]
+
+#duplicate values in row
+User.objects.values(‘first_name’).annotate(name_count=Count(‘first_name’)).filter(name_count__gt=1)
+
+
+#distinct user name
+User.objects.values(‘first_name’).annotate(name_count=Count(‘first_name’)).filter(name_count__gt=1)
+
+#Group records
+from django.db.models import Avg, Max, Min, Sum, Count
+User.objects.all().aggregate(Avg(‘id’))
+User.objects.all().aggregate(Max(‘id’))
+User.objects.all().aggregate(Min(‘id’))
+User.objects.all().aggregate(Sum(‘id’))
+
+#efficiently get random object from model
+class Category:
+	name=models.CharField(max_length=20)
+	class Meta:
+		verbose_name_plural=”categories”
+	def __str__(self):
+		return self.name
+
+From django.db.models import Max
+Import random
+def get_random():
+	max_id=Category.objects.all().aggregate(max_id=Max(“id”))[‘max_id’]
+	pk=random.randint(1,max_id)
+	return Category.objects.get(pk=pk)
+
+#create multiple objects at one time
+Category.objects.bulk_create([Category(name=”God”),
+				Category(name=”Mortal”),
+				Category(name=”Hello”)])
+
+Category.objects.all().Count() #3
+
+#copy an existing model
+Category.objects.all().Count()  #3
+c=Category.objects.first()
+c.pk=None	 #every field other than the PK is copied.
+c.save()
+Category.objects.all().Count()  #4
+
+
+#ensure only one object is created
+class Origin(models.Model):
+    name = models.CharField(max_length=100)
+
+    def save(self, *args, **kwargs):
+        if self.__class__.objects.count():
+            self.pk = self.__class__.objects.first().pk
+        super().save(*args, **kwargs)
+
+#Update denormalize other models object
+#You need the hero_count and villain_count, to be updated when new objects are created.’
+
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+    hero_count = models.PositiveIntegerField()
+    villain_count = models.PositiveIntegerField()
+
+    class Meta:
+        verbose_name_plural = "Categories"
+
+
+class Hero(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    # …
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            Category.objects.filter(pk=self.category_id).update(hero_count=F('hero_count')+1)
+        	super().save(*args, **kwargs)
+
+
+
+
+
+class Villain(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    # …
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            Category.objects.filter(pk=self.category_id).update(villain_count=F('villain_count')+1)
+        	super().save(*args, **kwargs)
+
+
+#truncate like operation
+Category.objects.all().delete()
+
+#convert string to datetime
+user = User.objects.get(id=1)
+>>> date_str = "2018-03-11"
+>>> from django.utils.dateparse import parse_date // Way 1
+>>> temp_date = parse_date(date_str)
+>>> a1 = Article(headline="String converted to date", pub_date=temp_date, reporter=user)
+>>> a1.save()
+>>> a1.pub_date
+datetime.date(2018, 3, 11)
+
+#order in case insensitive manner
+>>> from django.db.models.functions import Lower
+>>> User.objects.all().order_by(Lower('username')).values_list('username', flat=True)
+
+#order on a field from models
+Hero.objects.all().order_by('category__name', 'name')
+
+#Order on annotated field
+#You want to get the Category, ordered by number of Hero in them. You can do this.
+
+Category.objects.annotate(hero_count=Count("hero")).order_by("-hero_count")
+
+#One to One relationship
+from django.contrib.auth.models import User
+Class UserParent(models.Model):
+	user=models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True,)
+	father_name = models.CharField(max_length=100)
+    	mother_name = models.CharField(max_length=100)
+
+
+>>> u1 = User.objects.get(first_name='Ritesh', last_name='Deshmukh')
+>>> u2 = User.objects.get(first_name='Sohan', last_name='Upadhyay')
+>>> p1 = UserParent(user=u1, father_name='Vilasrao Deshmukh', mother_name='Vaishali Deshmukh')
+>>> p1.save()
+>>> p1.user.first_name
+'Ritesh'
+>>> p2 = UserParent(user=u2, father_name='Mr R S Upadhyay', mother_name='Mrs S K Upadhyay')
+>>> p2.save()
+>>> p2.user.last_name
+'Upadhyay'
+
+
+# The on_delete=models.CASCADE tells Django to cascade the deleting effect i.e. continue deleting the dependent models as well.
+
+#One to Many relationship
+
+class Article(models.Model):
+    headline = models.CharField(max_length=100)
+    pub_date = models.DateField()
+    reporter =models.ForeignKey(User,on_delete=models.CASCADE,related_name='reporter')
+
+    def __str__(self):
+        return self.headline
+
+    class Meta:
+        ordering = ('headline',)
+
+>>> u1 = User(username='johny1', first_name='Johny', last_name='Smith', email='johny@example.com')
+>>> u1.save()
+>>> u2 = User(username='alien', first_name='Alien', last_name='Mars', email='alien@example.com')
+>>> u2.save()
+>>> from datetime import date
+>>> a1 = Article(headline="This is a test", pub_date=date(2018, 3, 6), reporter=u1)
+>>> a1.save()
+>>> a1.reporter.id
+13
+>>> a1.reporter
+<User: johny1>
+
+#Many to Many relationship:
+class User(AbstractUser):
+    tweet = models.ManyToManyField(Tweet, blank=True)
+    follower = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
+    pass
+
+class Tweet(models.Model):
+    tweet = models.TextField()
+
+    favourite=models.ManyToManyField(settings.AUTH_USER_MODEL,blank=True,
+ related_name='user_favourite')
+
+    def __unicode__(self):
+        return self.tweet
+
+#Self reference model key
+class Employee(models.Model):
+    manager = models.ForeignKey('self', on_delete=models.CASCADE)
+
+#convert existing db to data models
+Python manage.py inspectdb > models.py
+
+#specify table name for models
+Class TempUser:
+	first_name=models.CharField(max_length=30)
+
+	Class Meta:
+		db_table=”temp_user
+
+#specify column name for model
+class ColumnName(models.Model):
+    a = models.CharField(max_length=40,db_column='column1')
+    column2 = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.a
+
+#Difference between Null and blank values:
+null=True will set the field’s value to NULL i.e., no data. It is basically for the databases column value.
+date = models.DateTimeField(null=True)
+
+blank=True determines whether the field will be required in forms. This includes the admin and your own custom forms.
+title = models.CharField(blank=True)
+
+#use UUID instead of id in primary key
+import uuid
+from django.db import models
+
+class Event(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    details = models.TextField()
+    years_ago = models.PositiveIntegerField()
+
+>>> eventobject = Event.objects.all()
+>>> eventobject.first().id
+'3cd2b4b0c36f43488a93b3bb72029f46'
+
+#Assert that function needed fixed num of queries
+def test_number_of_queries(self):
+    User.objects.create(username='testuser1', first_name='Test', last_name='user1')
+    # Above ORM create will run only one query.
+    self.assertNumQueries(1)
+    User.objects.filter(username='testuser').update(username='test1user')
+    # One more query added.
+    self.assertNumQueries(2)
+
+
+#reload model object from DB
+class TestORM(TestCase):
+    def test_update_result(self):
+        userobject = User.objects.create(username='testuser', first_name='Test', last_name='user')
+        User.objects.filter(username='testuser').update(username='test1user')
+        # At this point userobject.val is still testuser, but the value in the database
+        # was updated to test1user. The object's updated value needs to be reloaded
+        # from the database.
+        userobject.refresh_from_db()
+        self.assertEqual(userobject.username, 'test1user')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

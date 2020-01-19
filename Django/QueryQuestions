@@ -1,0 +1,50 @@
+#Filter a queryset with criteria based on comparing their field values
+    -  You can use the F object.
+
+In [27]: User.objects.create_user(email="shabda@example.com", username="shabda", first_name="Shabda", last_name="Raaj")
+Out[27]: <User: shabda>
+
+In [28]: User.objects.create_user(email="guido@example.com", username="Guido", first_name="Guido", last_name="Guido")
+Out[28]: <User: Guido>
+User.objects.filter(last_name=F("first_name"))
+Out[29]: <QuerySet [<User: Guido>]>
+
+#Filter file without any file
+#A FileField or ImageField stores the path of the file or image. At the DB level they are same as a CharField.
+
+no_files_objects=MyModel.objects.filter(Q(file='')|Q(file=None)
+
+#####Join operations #########
+#Using select_related
+
+a1=Article.objects.select_related('reporter')
+>>> a1
+<QuerySet [<Article: International News>, <Article: Local News>,
+<Article: Morning news>, <Article: Prime time>, <Article: Test Article>, <Article: Weather Report>]>
+
+print(a1.query)
+#SELECT "events_article"."id", "events_article"."headline", "events_article"."pub_date",
+"events_article"."reporter_id", "events_article"."slug", "auth_user"."id", "auth_user"."password",
+"auth_user"."last_login", "auth_user"."is_superuser", "auth_user"."username", "auth_user"."first_name",
+"auth_user"."last_name", "auth_user"."email", "auth_user"."is_staff", "auth_user"."is_active",
+"auth_user"."date_joined" FROM "events_article" INNER JOIN "auth_user" ON
+("events_article"."reporter_id" = "auth_user"."id") ORDER BY "events_article"."headline" ASC
+
+a2=Article.objects.filter(reporter__username='John')
+
+print(a2.query)
+
+>>> print(a2.query)
+SELECT "events_article"."id", "events_article"."headline", "events_article"."pub_date",
+ "events_article"."reporter_id", "events_article"."slug" FROM "events_article" INNER JOIN
+ "auth_user" ON ("events_article"."reporter_id" = "auth_user"."id") WHERE "auth_user"."username" = John
+  ORDER BY "events_article"."headline" ASC
+
+
+##### Secong largest record ###########
+#using slicing
+
+User.objects.order_by('-last_login')[1] #2nd highest record
+
+##### Third highest record ######
+User.objects.order_by('-last_login')[2]
