@@ -1,0 +1,15 @@
+2nd highest salary in MySQL without subquery:
+
+SELECT salary FROM Employee ORDER BY salary DESC LIMIT 1,1
+salary
+5000
+
+3rd highest salary in MySQL using LIMIT clause:
+
+SELECT salary FROM Employee ORDER BY salary DESC LIMIT 2,1
+salary
+4000
+
+Nth highest salary in MySQL using LIMIT clause:
+
+SELECT salary FROM Employee  ORDER BY Salary DESC LIMIT n-1,1

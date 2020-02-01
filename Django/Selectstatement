@@ -1,0 +1,31 @@
+#select some field in query
+Django provides two ways to do this
+- values and values_list methods on queryset.
+- only_method
+
+#method1
+User.objects.filter(first_name__startswith='R).values('first_name','last_name)
+
+#method2
+User.objects.filter(first_name__startswith='R).only('first_name','last_name)
+
+#Subquery expression
+
+
+class Category(models.Model):
+    name=models.CharField(max_length=100)
+class Hero(models.Model):
+    name=models.CharField(max_length=100)
+    category=models.ForeignKey(Category,on_delete=models.CASCADE)
+    benevolence_factor=models.PositiveSmallIntegerField(help_text="how benevolence this hero is?",default=50)
+
+hero_qs=Hero.objects.filter(category=OuterRef("pk").order_by("-benevolence_factor")
+
+Category.objects.all().annotate(most_benevolent_hero=Subquery(hero_qs.values('name')[:1]))
+
+"""We are ordering the Hero object by benevolence_factor in DESC order, and using category=OuterRef("pk")
+   to declare that we will be using it in a subquery.
+
+   Then we annotate with most_benevolent_hero=Subquery(hero_qs.values('name')[:1]),
+   to get use the subquery with a Category queryset. The hero_qs.values('name')[:1] part picks up the first name from subquery.
+"""
