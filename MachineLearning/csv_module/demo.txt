@@ -1,0 +1,3 @@
+name,department,bday month
+rupa,"cse,computer",jan
+ram,IT,may
