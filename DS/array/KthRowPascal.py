@@ -13,3 +13,6 @@ class Solution:
 
 obj = Solution()
 print(obj.getRow(5))
+
+
+
