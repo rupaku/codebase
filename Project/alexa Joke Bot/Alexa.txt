@@ -1,0 +1,30 @@
+Amazon developer console
+create skill
+select custom model,Alexa hosted python for dvelopment ,hello world skill
+create skill- if any changes made
+save and build model
+
+testing
+test-> select development
+alexa simulator-> type intent and get response
+
+
+The JSON input object was constructed from input data that the user entered through voice or text.
+The Alexa simulator packaged up the input along with other relevant metadata and sent it to the backend service. You can see this in the JSON Input box.
+The backend service received the input JSON object and parsed it to check the type of the request. Then, it passed the JSON to the relevant intent handler function.
+The intent handler function processed the input and gathered the required response, which is sent back as a JSON response to the Alexa simulator. You can see this in the JSON Output box.
+The Alexa simulator parsed this JSON and read the speech response back to you.
+
+create new intent------------------
+intents add+
+JokeIntent
+
+add utterance like
+tell me a joke
+i want to hear a joke
+
+save and build
+evaluate model by adding any utterances and get intent name
+
+code -> lambda_func.py
+create new intent func and call with object
