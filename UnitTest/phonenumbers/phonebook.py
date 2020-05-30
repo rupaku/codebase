@@ -8,3 +8,18 @@ class PhoneBook:
 
     def lookup(self, name):
         return self.numbers[name]
+
+    def get_names(self):
+        return self.name
+    
+    def get_numbers(self):
+        return self.numbers[name]
+
+    def is_consistent(self):
+        for name1,number1 in self.numbers.items():
+            for name2,number2 in self.numbers.items():
+                if name1 == name2:
+                    continue
+                if number1.startswith(number2):
+                    return False
+        return True
